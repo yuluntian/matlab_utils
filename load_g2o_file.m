@@ -1,4 +1,4 @@
-function measurements = load_g2o_data(g2o_data_file)
+function measurements = load_g2o_file(g2o_data_file)
 %
 % function measurements = load_g2o_data(g2o_data_file)
 % This function accepts as input a .g2o file containing the description of
