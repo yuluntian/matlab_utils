@@ -1,5 +1,5 @@
-function [measurements, poses] = load_g2o_file(g2o_data_file)
-%
+function [measurements, poses] = load_from_g2o(g2o_data_file)
+% function [measurements, poses] = load_from_g2o(g2o_data_file)
 % This function accepts as input a .g2o file containing the description of
 % a 2D or 3D pose graph SLAM problem, and returns a MATLAB struct
 % 'measurements' containing the description of the problem in the format 

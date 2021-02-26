@@ -1,3 +1,4 @@
+% function write_to_g2o(filename, measurements, xhat)
 % Write data to standard g2o format
 % 'filename': path to g2o file
 % 
