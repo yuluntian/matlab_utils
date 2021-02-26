@@ -1,10 +1,11 @@
-function measurements = load_g2o_file(g2o_data_file)
+function [measurements, poses] = load_g2o_file(g2o_data_file)
 %
-% function measurements = load_g2o_data(g2o_data_file)
 % This function accepts as input a .g2o file containing the description of
 % a 2D or 3D pose graph SLAM problem, and returns a MATLAB struct
 % 'measurements' containing the description of the problem in the format 
-% required by SE-Sync.  More precisely, 'measurements' consists of:
+% required by SE-Sync.  
+% 
+% 'measurements' consists of:
 % 
 % edges:  An (mx2)-dimensional matrix encoding the edges in the measurement 
 %      network; edges(k, :) = [i,j] means that the kth measurement is of the
@@ -19,18 +20,61 @@ function measurements = load_g2o_file(g2o_data_file)
 % tau:  An m-dimensional cell array whose kth element gives the precision
 %      of the translational part of the kth measurement.
 %
+% 'poses' consists of:
+%
+% vertices: (nx1)-dimensional vector encoding vertex id
+% R: n-dimensional array of rotation matrices
+% t: n-dimensional array of translation vectors
 % 
-
+% Author: Yulun Tian
 
 fid = fopen(g2o_data_file, 'r');
 edge_id = 0;
 read_line = fgets(fid);  % Read the next line from the file
 
+vertices = [];
+pR = {};
+pt = {};
+
 while ischar(read_line)  % As long as this line is a valid character string
     
     token = strtok(read_line);
     
-    if(strcmp(token, 'EDGE_SE3:QUAT'))
+    if(strcmp(token, 'VERTEX_SE3:QUAT'))
+        % 3D pose format:
+        % VERTEX_SE3:QUAT id x y z qx qy qz qw
+        [name, id, x, y, z, qx, qy, qz, qw] = ...
+            strread(read_line, '%s %d  %f %f %f  %f %f %f %f');
+        
+        % Store the vertex id
+        vertices = [vertices; id + 1];  % MATLAB uses 1-based indexing
+        
+        % Store the translation vector
+        pt{end+1} = [x, y, z]';
+        
+        q = [qw, qx, qy, qz]';
+        q = q / norm(q);  % Make sure that this is properly normalized
+        
+        % Compute and store corresponding rotation matrix
+        pR{end+1} = quat2rot(q);
+        
+    elseif(strcmp(token, 'VERTEX_SE2'))
+        % 2D pose format:
+        % VERTEX_SE2 ID x_meters y_meters yaw_radians
+        [name, id, x, y, th] = ...
+            strread(read_line, '%s %d  %f %f %f');
+        
+        % Store the vertex id
+        vertices = [vertices; id + 1];  % MATLAB uses 1-based indexing
+        
+        % Store the translation vector
+        pt{end+1} = [x, y]';
+       
+        % Reconstruct and store the rotation
+        pR{end+1} = [cos(th), -sin(th); 
+                     sin(th), cos(th)];
+    
+    elseif(strcmp(token, 'EDGE_SE3:QUAT'))
         % 3D OBSERVATION
     
         edge_id = edge_id + 1;  % Increment the count for the number of edges
@@ -124,6 +168,8 @@ while ischar(read_line)  % As long as this line is a valid character string
         % measurement precision
         kappa{edge_id} = I33;
        
+    else
+        error('Unknown name while reading g2o file: %s', token);
     end
     
     read_line = fgets(fid);
@@ -135,6 +181,11 @@ measurements.R = R;
 measurements.t = t;
 measurements.kappa = kappa;
 measurements.tau = tau;
+
+% Construct and return pose struct
+poses.vertices = vertices;
+poses.R = pR;
+poses.t = pt;
 
 end
 
