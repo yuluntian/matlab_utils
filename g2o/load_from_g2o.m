@@ -187,5 +187,6 @@ poses.vertices = vertices;
 poses.R = pR;
 poses.t = pt;
 
+fclose(fid);
 end
 

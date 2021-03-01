@@ -6,31 +6,40 @@ clear; clc; close all;
 RBCD_root_dir = '/home/yulun/git/bcm2019/code/MATLAB/';
 run(fullfile(RBCD_root_dir, 'setup.m'));
 
-%% Generate synthetic data
-sim_opts.num_rows = 12; % height of a single robot grid
-sim_opts.num_columns = 12; % width of a single robot grid
-sim_opts.num_floors = 12; % number of floors of a single grid
-sim_opts.lc_prob = 0.3; % probability of intra-robot loop closure
-sim_opts.fov = 1.1; % field of view, within which inter-robot loop closure is sampled 
-sim_opts.velocity = 1; % velocity of each robot
-sim_opts.t_stddev = 1e-1; % translational measurement standard deviation (meter)
-sim_opts.deg_stddev = 1.5; % rotational measurement standard deviation (degree)
-sim_opts.lc_outlier_prob = 0.0; % percentage of outlier loop closures
+%% Generate problem from benchmark datasets
+g2o_benchmark_dir = '/home/yulun/git/bcm2019/code/data/';
+g2o_file_benchmark = fullfile(g2o_benchmark_dir, 'input_INTEL_g2o.g2o');
+measurements_benchmark = load_from_g2o(g2o_file_benchmark);
 
-% simulate! 
-[measurements, true_pose, gt_info] = simulate_single_grid_3D(sim_opts);
-d = 3;
-n = max(max(measurements.edges));
+% treat the SE-Sync solution as the new ground truth
+[~, ~, xtrue, ~, ~, ~] = SE_Sync(measurements_benchmark);
+
+% Regenerate relative measurements with specified noise model
+sim_opts.t_stddev = 0.05;               % translational measurement standard deviation (meter)
+sim_opts.deg_stddev = 0.5;              % rotational measurement standard deviation (degree)
+sim_opts.lc_outlier_prob = 0.0;         % percentage of outlier loop closures (replace)
+
+% Simulate! 
+[measurements, gt_info] = regenerate_measurements(measurements_benchmark, xtrue, sim_opts);
+
+% Inspect SE-Sync solution on new measurements
+[~, ~, xhat, ~, ~, ~] = SE_Sync(measurements);
+% figure;
+% hold on;
+% plot_translations(gca, xhat.t);
+% axis equal;
+fprintf('ATE: %g\n', compute_ATE(xtrue.t, xhat.t))
 
 %% Obtain initial guess
 [R, t] = chordal_initialization(measurements);
 xhat.R = R;
 xhat.t = t;
-
+d = size(t,1);
+n = size(t,2);
 %% IO
 filename = 'test.g2o';
 write_to_g2o(filename, measurements, xhat);
-[measurements2, poses] = load_g2o_file(filename);
+[measurements2, poses] = load_from_g2o(filename);
 
 %% Sanity checks
 tol = 1e-5;

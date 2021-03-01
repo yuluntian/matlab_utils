@@ -1,3 +1,4 @@
+% function [T_dst_src, translations_src_aligned] = align_translations(translations_src, translations_dst)
 % Given two sets of points in different global frames, find the rigid-body
 % transformation that transform points in the src frame to points in the
 % dst frame.
