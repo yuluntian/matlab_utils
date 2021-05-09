@@ -28,16 +28,27 @@ function write_to_g2o(filename, measurements, xhat)
 fout = fopen(filename, 'w'); % discard existing content if any
 
 d = size(measurements.t{1},1);
-n = max(max(measurements.edges));  % number of poses
 assert(d == 2 || d == 3, 'invalid problem dimension: %g', d);
 
 if nargin == 3
+    n = size(xhat.t,2);  % number of poses
     assert(size(xhat.R,1) == d);
     assert(size(xhat.R,2) == d*n);
     assert(size(xhat.t,1) == d);
     assert(size(xhat.t,2) == n);
+    % if node indices is provided, check it has correct length
+    if isfield(xhat, 'node_indices')
+        assert(length(xhat.node_indices) == n);
+    end
     
     for i = 1:n
+        % Read node id if provided
+        if isfield(xhat, 'node_indices')
+            node_id = xhat.node_indices(i);
+        else
+            node_id = i;
+        end
+        
         % Read rotation and convert to quaternion
         R = xhat.R(:, (i-1)*d+1:i*d);
         check_rotation_matrix(R);
@@ -60,7 +71,7 @@ if nargin == 3
             % G2O fotmat:  VERTEX_SE3:QUAT id x  y  z  qx qy qz qw
             g2oLineSpec = 'VERTEX_SE3:QUAT %d %f %f %f %f %f %f %f\n';
             fprintf(fout, g2oLineSpec, ...
-                    i-1, x, y, z, qx, qy, qz, qw);  % g2o index starts from 0
+                    node_id-1, x, y, z, qx, qy, qz, qw);  % g2o index starts from 0
         
         else
             % Convert 2d rotation to euler angle
@@ -74,7 +85,7 @@ if nargin == 3
             % G2O format: VERTEX_SE2 ID x_meters y_meters yaw_radians
             g2oLineSpec = 'VERTEX_SE2 %d %f %f %f\n';
             fprintf(fout, g2oLineSpec, ...
-                    i-1, x, y, theta);  % g2o index starts from 0
+                    node_id-1, x, y, theta);  % g2o index starts from 0
         end
     end
     fprintf('Saved %i poses to %s.\n', n, filename);
