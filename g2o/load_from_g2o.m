@@ -43,11 +43,11 @@ while ischar(read_line)  % As long as this line is a valid character string
     if(strcmp(token, 'VERTEX_SE3:QUAT'))
         % 3D pose format:
         % VERTEX_SE3:QUAT id x y z qx qy qz qw
-        [name, id, x, y, z, qx, qy, qz, qw] = ...
-            strread(read_line, '%s %d  %f %f %f  %f %f %f %f');
+        C = textscan(read_line, '%s %d64  %f %f %f  %f %f %f %f');
+        [name, id, x, y, z, qx, qy, qz, qw] = C{:};
         
         % Store the vertex id
-        vertices = [vertices; id + 1];  % MATLAB uses 1-based indexing
+        vertices = [vertices id + 1];  % MATLAB uses 1-based indexing
         
         % Store the translation vector
         pt{end+1} = [x, y, z]';
@@ -61,11 +61,11 @@ while ischar(read_line)  % As long as this line is a valid character string
     elseif(strcmp(token, 'VERTEX_SE2'))
         % 2D pose format:
         % VERTEX_SE2 ID x_meters y_meters yaw_radians
-        [name, id, x, y, th] = ...
-            strread(read_line, '%s %d  %f %f %f');
+        C = textscan(read_line, '%s %d64  %f %f %f');
+        [name, id, x, y, th] = C{:};
         
         % Store the vertex id
-        vertices = [vertices; id + 1];  % MATLAB uses 1-based indexing
+        vertices = [vertices id + 1];  % MATLAB uses 1-based indexing
         
         % Store the translation vector
         pt{end+1} = [x, y]';
@@ -90,15 +90,14 @@ while ischar(read_line)  % As long as this line is a valid character string
         %             I44 I45 I46
         %                 I55 I56
         %                     I66
-        
+        C = textscan(read_line, '%s %d64 %d64 %f %f %f %f %f %f %f    %f %f %f %f %f %f    %f %f %f %f %f   %f %f %f %f   %f %f %f    %f %f    %f');
         [name, id1, id2, dx, dy, dz, dqx, dqy, dqz, dqw, ...
             I11, I12, I13, I14, I15, I16, ...
             I22, I23, I24, I25, I26, ...
             I33, I34, I35, I36, ...
             I44, I45, I46, ...
             I55, I56, ...
-            I66] = ...
-            strread(read_line, '%s %d %d %f %f %f %f %f %f %f    %f %f %f %f %f %f    %f %f %f %f %f   %f %f %f %f   %f %f %f    %f %f    %f');
+            I66] = C{:};
         
         % Store the connectivity of this edge
         edges(edge_id, :) = [id1 + 1, id2 + 1];  % NB: .g2o uses 0-based indexing, whereas MATLAB uses 1-based indexing
@@ -141,10 +140,10 @@ while ischar(read_line)  % As long as this line is a valid character string
         % following form:
         
         % EDGE_SE2 id1 id2 dx dy dtheta, I11, I12, I13, I22, I23, I33
+        C = textscan(read_line, '%s %d64 %d64 %f %f %f %f %f %f %f %f %f');
+        [name, id1, id2, dx, dy, dth, I11, I12, I13, I22, I23, I33] = C{:};
         
-        [name, id1, id2, dx, dy, dth, I11, I12, I13, I22, I23, I33] = strread(read_line, '%s %d %d %f %f %f %f %f %f %f %f %f');
-        
-          % Store the connectivity of this edge
+        % Store the connectivity of this edge
         edges(edge_id, :) = [id1 + 1, id2 + 1];  % NB: .g2o uses 0-based indexing, whereas MATLAB uses 1-based indexing
         
         % Store the translational measurement
