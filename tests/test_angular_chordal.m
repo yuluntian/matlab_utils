@@ -5,8 +5,8 @@ for trial = 1:10000
     R1 = randrot(3);
     R2 = randrot(3);
     d = norm(R1-R2, 'fro');
-    th = chordal2angular(d);
-    d2 = angular2chordal(th);
+    th = chordal2angular_3d(d);
+    d2 = angular2chordal_3d(th);
     assert(abs(d-d2) < 1e-8);
 end
 
