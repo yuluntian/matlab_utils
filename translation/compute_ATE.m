@@ -1,3 +1,4 @@
+% function ATE = compute_ATE(translations1, translations2)
 % Given two sets of positions, align the positions and then compute the
 % RMSE absolute trajectory error.
 %
