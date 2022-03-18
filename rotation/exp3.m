@@ -17,8 +17,11 @@ else
 end
 
 th = norm(w);
-a = w / th;
-
-R = cos(th)*eye(3) + (1-cos(th)) * (a * a') + sin(th) * hat3(a);
+if th < 1e-12
+    R = eye(3);
+else
+    a = w / th;
+    R = cos(th)*eye(3) + (1-cos(th)) * (a * a') + sin(th) * hat3(a);
+end
 
 end
