@@ -10,6 +10,9 @@ end
 if ~isfield(options, 'rotation_distance')
     options.rotation_distance = 'chordal';
 end
+if ~isfield(options, 'lambda')
+    options.lambda = 0;
+end
 if ~isfield(options, 'max_iterations')
     options.max_iterations = 100;
 end
@@ -31,7 +34,8 @@ for iter = 1 : options.max_iterations
         break;
     end
     % Solve Newton system
-    x = - Hess \ grad;
+    H = Hess + options.lambda * speye(p * n);
+    x = - H \ grad;
     % Apply tangent space solution
     for i = 1:n
         idxs = (i-1) * d + 1  : i * d;
