@@ -21,18 +21,17 @@ assert(d == 2 || d == 3);
 assert(strcmp(options.rotation_distance, 'chordal'));
 
 % Compute residual
-rMatrix = Rj - Ri * Rij;
-r = reshape(rMatrix, [], 1);
+r = mat2vec(Rj - Ri * Rij);
 
 % Compute Jacobian
 if d == 2
     G = [0 -1; 1 0];  % generator on so(2)
     if strcmp(options.tangent_space_parametrization, 'global')
-        Ji = vecmat(- G * Ri * Rij);
-        Jj = vecmat(G* Rj);
+        Ji = mat2vec(- G * Ri * Rij);
+        Jj = mat2vec(G* Rj);
     elseif strcmp(options.tangent_space_parametrization, 'local')
-        Ji = vecmat(-Ri * G * Rij);
-        Jj = vecmat(Rj * G);
+        Ji = mat2vec(-Ri * G * Rij);
+        Jj = mat2vec(Rj * G);
     else
         error('Unknown tangent space parametrization: %s', options.tangent_space_parametrization)
     end
@@ -43,8 +42,8 @@ else
     if strcmp(options.tangent_space_parametrization, 'global')
         error('global parametrization for SO(3) is not implemented.');
     elseif strcmp(options.tangent_space_parametrization, 'local')
-        Ji = -[vecmat(Ri*G1*Rij) vecmat(Ri*G2*Rij) vecmat(Ri*G3*Rij)];
-        Jj =  [vecmat(Rj*G1) vecmat(Rj*G2) vecmat(Rj*G3)];
+        Ji = -[mat2vec(Ri*G1*Rij) mat2vec(Ri*G2*Rij) mat2vec(Ri*G3*Rij)];
+        Jj =  [mat2vec(Rj*G1) mat2vec(Rj*G2) mat2vec(Rj*G3)];
     else
         error('Unknown tangent space parametrization: %s', options.tangent_space_parametrization)
     end
