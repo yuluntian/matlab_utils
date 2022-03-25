@@ -40,7 +40,8 @@ else
     G2 = gen3(2);
     G3 = gen3(3);
     if strcmp(options.tangent_space_parametrization, 'global')
-        error('global parametrization for SO(3) is not implemented.');
+        Ji = -[mat2vec(G1*Ri*Rij) mat2vec(G2*Ri*Rij) mat2vec(G3*Ri*Rij)];
+        Jj =  [mat2vec(G1*Rj) mat2vec(G2*Rj) mat2vec(G3*Rj)];
     elseif strcmp(options.tangent_space_parametrization, 'local')
         Ji = -[mat2vec(Ri*G1*Rij) mat2vec(Ri*G2*Rij) mat2vec(Ri*G3*Rij)];
         Jj =  [mat2vec(Rj*G1) mat2vec(Rj*G2) mat2vec(Rj*G3)];
