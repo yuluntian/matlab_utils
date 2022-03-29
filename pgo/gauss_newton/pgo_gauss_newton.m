@@ -33,14 +33,16 @@ else
     error('Invalid dimension %i', d);
 end
 
-for iter = 1 : options.max_iterations 
+iter = 1;
+while true
     [r, J, W] = linearize_pgo(measurements, R, t, options);
     cost = r' * (W * r);
     grad = J' * (W * r);
     gradnorm = norm(grad);
+    if iter > options.max_iterations
+        break;
+    end
     if gradnorm < options.gradnorm_tol
-        fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
-                   iter, cost, gradnorm);
         break;
     end
     % Solve Gauss-Newton system
@@ -73,6 +75,10 @@ for iter = 1 : options.max_iterations
     end
     fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
               iter, cost, gradnorm, norm(x));
+    iter = iter + 1;
 end
+
+fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
+                   iter, cost, gradnorm);
 
 end
