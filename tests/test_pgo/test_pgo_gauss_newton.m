@@ -7,7 +7,7 @@ addpath(genpath(dc2pgo_path));
 
 %% Main
 dataset_dir = '/home/yulun/git/dc2_pgo/data';
-g2o_file = fullfile(dataset_dir, 'parking-garage.g2o');
+g2o_file = fullfile(dataset_dir, 'input_MITb_g2o.g2o');
 measurements = load_g2o_data(g2o_file);
 [R,t] = chordal_initialization(measurements);
 
