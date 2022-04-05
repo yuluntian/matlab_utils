@@ -1,11 +1,11 @@
-% function R = exp3(w)
+% function R = exp3d(w)
 % Compute the exponential map for 3d rotation
 % Input is either a 3-vector or the corresponding 3-by-3 skew symmetric
 % matrix.
 % Reference: eq (7.23) of Barfoot textbook
 % 
 % Yulun Tian
-function R = exp3(x)
+function R = exp3d(x)
 assert(size(x,1) == 3);
 
 if size(x,2) == 1

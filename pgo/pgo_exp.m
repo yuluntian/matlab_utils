@@ -10,10 +10,10 @@ function [R, t] = pgo_exp(R, t, x, options)
     n = size(t,2);
     if d == 2
         p = 3;  % intrisic dimension of a single pose
-        Rexp = @exp2;
+        Rexp = @exp2d;
     elseif d == 3
         p = 6; 
-        Rexp = @exp3;
+        Rexp = @exp3d;
     else
         error('Invalid dimension %i', d);
     end
