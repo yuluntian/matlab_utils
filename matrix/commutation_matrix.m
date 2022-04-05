@@ -11,7 +11,7 @@ function K = commutation_matrix(m,n)
 I = reshape(1:m*n, [m, n]);
 I = I';
 I = I(:);
-K = eye(m*n);
+K = speye(m*n);
 K = K(I,:);
 
 end
