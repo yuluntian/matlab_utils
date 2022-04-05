@@ -21,8 +21,12 @@ if ~isfield(options, 'gradnorm_tol')
 end
 d = length(measurements.t{1});
 n = max(max(measurements.edges));
-assert(d == 3);
+
+% Currently, this implementation only supports 3D and local tangent space
+% parametrization
+assert(d == 3, 'PGO problem is not 3D.');
 p = 6;
+options.tangent_space_parametrization = 'local';
 
 for iter = 1 : options.max_iterations 
     cost = evaluate_pgo_cost(measurements, R, t, options);
@@ -37,19 +41,7 @@ for iter = 1 : options.max_iterations
     H = Hess + options.lambda * speye(p * n);
     x = - H \ grad;
     % Apply tangent space solution
-    for i = 1:n
-        idxs = (i-1) * d + 1  : i * d;
-        ipxs = (i-1) * p + 1  : i * p;
-        Ri = R(:, idxs);
-        ti = t(:,i);
-        xi = x(ipxs);
-        dRi = xi(1:3);
-        dti = xi(4:6);
-        Ri_new = Ri * exp3(dRi);
-        ti_new = ti + dti;
-        R(:, idxs) = Ri_new;
-        t(:, i) = ti_new;
-    end
+    [R, t] = pgo_exp(R, t, x, options);
     fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
               iter, cost, gradnorm, norm(x));
 end
