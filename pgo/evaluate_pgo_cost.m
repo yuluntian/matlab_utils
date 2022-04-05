@@ -3,9 +3,15 @@
 % 
 % Yulun Tian
 function cost = evaluate_pgo_cost(measurements, R, t, options)
+if nargin < 4
+    options = struct;
+end
+if ~isfield(options, 'rotation_distance')
+    options.rotation_distance = 'chordal';
+end
+
 cost = 0;
 d = size(measurements.t{1},1); 
-assert(d == 3);
 n = max(max(measurements.edges));
 m = size(measurements.edges, 1);
 
