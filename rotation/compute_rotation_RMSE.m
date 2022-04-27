@@ -16,6 +16,6 @@ squared_error = compute_rotation_orbit_distance(Ropt, R).^2;
 % root mean squared error (Chordal)
 error_chordal = sqrt(squared_error/n);
 
-error_degree = chordal2angular_3d(error_chordal);
+error_degree = chordal_to_angular_3d(error_chordal);
 
 end
