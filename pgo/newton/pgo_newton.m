@@ -4,6 +4,7 @@
 %
 % Yulun Tian
 function [R,t] = pgo_newton(measurements, R, t, options)
+fprintf('=== Begin PGO Newton ===\n\n');
 if nargin < 4
     options = struct;
 end
@@ -45,6 +46,6 @@ for iter = 1 : options.max_iterations
     fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
               iter, cost, gradnorm, norm(x));
 end
-
+fprintf('=== End PGO Newton ===\n\n');
 
 end

@@ -3,6 +3,7 @@
 % 
 % Yulun Tian
 function [R, t] = pgo_gauss_newton(measurements, R, t, options)
+fprintf('=== Begin PGO Gauss-Newton ===\n\n');
 if nargin < 4
     options = struct;
 end
@@ -46,5 +47,5 @@ end
 
 fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
-
+fprintf('=== End PGO Gauss-Newton ===\n\n');
 end
