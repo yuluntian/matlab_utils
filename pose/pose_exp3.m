@@ -11,7 +11,7 @@ assert(size(x,2) == 1);
 rho = x(1:3);
 phi = x(4:6);
 
-C = exp3(phi);
+C = exp3d(phi);
 J = jacobian3(phi);
 T = [C               J * rho;
        zeros(1,3)  1];
