@@ -3,7 +3,7 @@
 % optimization.
 %
 % Yulun Tian
-function [R,t] = pgo_newton(measurements, R, t, options)
+function [R, t, info] = pgo_newton(measurements, R, t, options)
 fprintf('=== Begin PGO Newton ===\n\n');
 if nargin < 4
     options = struct;
@@ -29,10 +29,20 @@ assert(d == 3, 'PGO problem is not 3D.');
 p = 6;
 options.tangent_space_parametrization = 'local';
 
+% Save optimization stats
+info = struct;
+info.costs = [];
+info.gradnorms = [];
+if isfield(options, 'eval_func')
+    info.eval_results = [];
+end
 for iter = 1 : options.max_iterations 
     cost = evaluate_pgo_cost(measurements, R, t, options);
     [grad, Hess] = differentiate_pgo(measurements, R, t, options);
     gradnorm = norm(grad);
+    info.costs(iter) = cost;
+    info.gradnorms(iter) = gradnorm;
+    info.eval_results = [info.eval_results options.eval_func(R, t)];
     if gradnorm < options.gradnorm_tol
         fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
@@ -47,5 +57,5 @@ for iter = 1 : options.max_iterations
               iter, cost, gradnorm, norm(x));
 end
 fprintf('=== End PGO Newton ===\n\n');
-
+info.numiters = length(info.costs);
 end

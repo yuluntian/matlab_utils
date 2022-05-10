@@ -2,7 +2,7 @@
 % A simple Gauss-Newton solver for 2D pose graph optimization.
 % 
 % Yulun Tian
-function [R, t] = pgo_gauss_newton(measurements, R, t, options)
+function [R, t, info] = pgo_gauss_newton(measurements, R, t, options)
 fprintf('=== Begin PGO Gauss-Newton ===\n\n');
 if nargin < 4
     options = struct;
@@ -14,7 +14,7 @@ if ~isfield(options, 'rotation_distance')
     options.rotation_distance = 'chordal';
 end
 if ~isfield(options, 'lambda')
-    options.lambda = 1e1;
+    options.lambda = 0;
 end
 if ~isfield(options, 'max_iterations')
     options.max_iterations = 100;
@@ -23,12 +23,22 @@ if ~isfield(options, 'gradnorm_tol')
     options.gradnorm_tol = 1e-2;
 end
 
+% Save optimization stats
+info = struct;
+info.costs = [];
+info.gradnorms = [];
+if isfield(options, 'eval_func')
+    info.eval_results = [];
+end
 iter = 1;
 while true
     [r, J, W] = linearize_pgo(measurements, R, t, options);
-    cost = r' * (W * r);
-    grad = J' * (W * r);
-    gradnorm = norm(grad);
+    cost = evaluate_pgo_cost(measurements, R, t);
+    g = differentiate_pgo(measurements, R, t);
+    gradnorm = norm(g);
+    info.costs(iter) = cost;
+    info.gradnorms(iter) = gradnorm;
+    info.eval_results = [info.eval_results options.eval_func(R, t)];
     if iter > options.max_iterations
         break;
     end
@@ -36,6 +46,7 @@ while true
         break;
     end
     % Solve Gauss-Newton system
+    grad = J' * (W * r);
     H = J' * (W * J) + options.lambda * speye(size(J,2));
     x = - H \ grad;
     % Apply tangent space solution
@@ -48,4 +59,5 @@ end
 fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
 fprintf('=== End PGO Gauss-Newton ===\n\n');
+info.numiters = length(info.costs);
 end
