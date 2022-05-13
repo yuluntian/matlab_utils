@@ -42,7 +42,9 @@ for iter = 1 : options.max_iterations
     gradnorm = norm(grad);
     info.costs(iter) = cost;
     info.gradnorms(iter) = gradnorm;
-    info.eval_results = [info.eval_results options.eval_func(R, t)];
+    if isfield(options, 'eval_func')
+        info.eval_results = [info.eval_results options.eval_func(R, t)];
+    end
     if gradnorm < options.gradnorm_tol
         fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
