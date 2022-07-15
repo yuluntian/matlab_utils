@@ -43,20 +43,19 @@ for k = 1:m
     RTilde(jdxs, idxs) = kappa * Rij';
 end
 [RTilde, sym_error] = make_symmetric(RTilde);
-assert(sym_error < options.symmetric_tol);
+assert(sym_error < 1e-6);  % data matrix should always be symmetric
 
 % Recover Langrange multipliers and dual certificate matrix
 P = RTilde * Rstar';
 S = -RTilde;
+multiplier_symmetric_errors = zeros(1,n);
 for i = 1:n
     idxs = (i-1)*d + 1 : i*d;
     Pi = P(idxs, :);
     Ri_star = Rstar(:, idxs);
     Lambda_i = Pi * Ri_star;
     [Lambda_i, sym_error] = make_symmetric(Lambda_i);
-    if sym_error > options.symmetric_tol  && options.verbose
-        warning( 'Langrange multipler is not symmetric! Error: %f. ', sym_error);
-    end
+    multiplier_symmetric_errors(i) = sym_error;
     S(idxs, idxs) = Lambda_i;
 end
 S = make_symmetric(S);
@@ -80,10 +79,11 @@ vinit = v + sigma*randn(d*n, 1);
 
 info.lambda_min = lambda_min;
 info.v_min = vmin;
+info.multiplier_symmetric_errors = multiplier_symmetric_errors;
 if flag ~=0 
     warning('Eigenvalue computation did not converge to desired precision.')
 end
-if lambda_min > options.mineig_tol
+if flag ==0 && lambda_min > options.mineig_tol && max(multiplier_symmetric_errors) < options.symmetric_tol
     is_optimal = true;
 else
     is_optimal = false;
