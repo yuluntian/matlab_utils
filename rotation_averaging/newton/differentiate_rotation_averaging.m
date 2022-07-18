@@ -11,6 +11,12 @@ end
 if ~isfield(options, 'rotation_distance')
     options.rotation_distance = 'chordal';
 end
+if ~isfield(options, 'tangent_space_parametrization')
+    options.tangent_space_parametrization = 'local';
+end
+assert(strcmp(options.tangent_space_parametrization, 'local') || ...
+           strcmp(options.tangent_space_parametrization, 'global') );
+
 d = size(measurements.R{1}, 1);
 assert(d == 3);
 p = 3;
@@ -89,12 +95,30 @@ for k = 1:m
     g(jdxs_) = g(jdxs_) + gj;
 end
 
+% Convert gradient to global tangent space (Lie algebra) if requested
+if strcmp(options.tangent_space_parametrization, 'global')
+    % The global tangent vector eta is related to the local tangent vector w via: 
+    % w = A * eta, where A is a block-diagonal matrix, with Aii = Ri^T
+    A = sparse(d * n, d * n);
+    for i = 1:n
+        idxs = (i-1)*d+1 : i*d;
+        A(idxs, idxs) = R(:, idxs)';
+    end
+    % The global tangent space gradient is computed via chain rule
+    g = A' * g;
+end
+
 % Construct sparse Hessian matrix
 if nargout > 1
     H = sparse(Hrows, Hcols, Hvals, p * n, p * n);
-    Hsym = (H + H') / 2;
-    error_sym = norm(H - Hsym, 'fro');
-    assert(error_sym < 1e-8);
+    if strcmp(options.tangent_space_parametrization, 'global')
+        H = A' * H * A;
+        [H, sym_error] = make_symmetric(H);
+    else
+        [H, sym_error] = make_symmetric(H);
+    end
+    assert(sym_error < 1e-8, ...
+        'Hessian is not symmetric! Error: %f', sym_error);
 end
 
 end
