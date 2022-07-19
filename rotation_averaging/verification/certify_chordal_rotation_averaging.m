@@ -35,6 +35,7 @@ RTilde = sparse(d*n, d*n);
 for k = 1:m
     i = edges(k,1);
     j = edges(k,2);
+    assert(i~=j);
     Rij = measurements.R{k};
     kappa = measurements.kappa{k};
     idxs = (i-1)*d + 1 : i*d;
@@ -82,11 +83,20 @@ info.v_min = vmin;
 info.multiplier_symmetric_errors = multiplier_symmetric_errors;
 if flag ~=0 
     warning('Eigenvalue computation did not converge to desired precision.')
-end
-if flag ==0 && lambda_min > options.mineig_tol && max(multiplier_symmetric_errors) < options.symmetric_tol
-    is_optimal = true;
-else
     is_optimal = false;
+elseif max(multiplier_symmetric_errors) > options.symmetric_tol
+    [max_err, max_ind] = max(multiplier_symmetric_errors);
+    warning('Lagrange multiplier is not sufficiently symmetric. Max error: %.2ef (node %i)', max_err, max_ind)
+    is_optimal = false;
+elseif lambda_min < options.mineig_tol
+    warning('Min eigenvalue is not sufficiently close to zero: %.2e', lambda_min)
+    is_optimal = false;
+else
+    fprintf(['Certified global minimum! ' ...
+        'Min eigval: %.2e,' ...
+        'Max multiplier symmetry error: %.2e,' ...
+        '\n'], lambda_min, max(multiplier_symmetric_errors));
+    is_optimal = true;
 end
 
 end
