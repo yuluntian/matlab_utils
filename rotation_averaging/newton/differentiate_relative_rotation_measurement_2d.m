@@ -23,7 +23,9 @@ gi = rgrad(1);
 gj = rgrad(2);
 
 if nargout > 2
-    % TODO: derive
+    % Ref: Tron (E.40) which is a result of chain rule (C.8)
+    % Note that for SO(2), DLog(R)/||Log(R)|| is zero, and thus the second
+    % term in E.40 disappears
     H12 = fddot_theta;
     Hii = H12 * kappa;
     Hjj = H12 * kappa;
