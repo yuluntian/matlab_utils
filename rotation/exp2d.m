@@ -5,9 +5,11 @@
 % Yulun Tian
 function R = exp2d(w)
 
-W = w * gen2;
-assert(size(W,1) == 2);
-assert(size(W,2) == 2);
-R = expm(W);
+% W = w * gen2;
+% assert(size(W,1) == 2);
+% assert(size(W,2) == 2);
+% R = expm(W);
+R = [cos(w) -sin(w);
+       sin(w)   cos(w)];
 
 end
