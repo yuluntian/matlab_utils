@@ -16,14 +16,17 @@ end
 if ~isfield(options, 'gradnorm_tol')
     options.gradnorm_tol = 1e-2;
 end
+if ~isfield(options, 'tangent_space_parametrization')
+    options.tangent_space_parametrization = 'local';
+end
 d = size(measurements.R{1}, 1);
 n = max(max(measurements.edges));
-
-% Currently, this implementation only supports 3D and local tangent space
-% parametrization
-assert(d == 3, 'Rotation averaging problem is not 3D.');
-p = 3;
-options.tangent_space_parametrization = 'local';
+assert(d == 2 || d == 3, 'Rotation averaging problem must be 2D or 3D.');
+if d == 2
+    p = 1;
+else
+    p = 3;
+end
 
 for iter = 1 : options.max_iterations 
     cost = evaluate_rotation_averaging_cost(measurements, R, options);

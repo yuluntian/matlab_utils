@@ -18,8 +18,14 @@ assert(strcmp(options.tangent_space_parametrization, 'local') || ...
            strcmp(options.tangent_space_parametrization, 'global') );
 
 d = size(measurements.R{1}, 1);
-assert(d == 3);
-p = 3;
+assert(d == 2 || d == 3);
+if d == 2
+    diff_func = @differentiate_relative_rotation_measurement_2d;
+    p = 1;
+else
+    diff_func = @differentiate_relative_rotation_measurement;
+    p = 3;
+end
 n = max(max(measurements.edges));
 m = size(measurements.edges, 1);
 g = zeros(p*n, 1);
@@ -45,9 +51,9 @@ for k = 1:m
     idxs_ = ((i-1)*p+1) : i*p;
     jdxs_ = ((j-1)*p+1) : j*p;
     if nargout == 1
-        [gi, gj] = differentiate_relative_rotation_measurement(Ri, Rj, Rij, kappa, options);
+        [gi, gj] = diff_func(Ri, Rj, Rij, kappa, options);
     else
-        [gi, gj, Hii, Hjj, Hij] = differentiate_relative_rotation_measurement(Ri, Rj, Rij, kappa, options);
+        [gi, gj, Hii, Hjj, Hij] = diff_func(Ri, Rj, Rij, kappa, options);
         % Assemble Hii
         row_offset = (i-1)*p;
         col_offset = (i-1)*p;
@@ -97,12 +103,18 @@ end
 
 % Convert gradient to global tangent space (Lie algebra) if requested
 if strcmp(options.tangent_space_parametrization, 'global')
-    % The global tangent vector eta is related to the local tangent vector w via: 
-    % w = A * eta, where A is a block-diagonal matrix, with Aii = Ri^T
-    A = sparse(d * n, d * n);
-    for i = 1:n
-        idxs = (i-1)*d+1 : i*d;
-        A(idxs, idxs) = R(:, idxs)';
+    if d == 3
+        % For SO(3), the global tangent vector eta is related to the local tangent vector w via a linear map (Adjoint): 
+        % w = A * eta, where A is a block-diagonal matrix, with Aii = Ri^T
+        A = sparse(d * n, d * n);
+        for i = 1:n
+            idxs = (i-1)*d+1 : i*d;
+            A(idxs, idxs) = R(:, idxs)';
+        end
+    else
+        % For SO(2), the linear map (Adjoint) is simply Identity, because
+        % rotations commute in 2D.
+        A = speye(n);
     end
     % The global tangent space gradient is computed via chain rule
     g = A' * g;

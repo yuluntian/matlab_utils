@@ -48,6 +48,7 @@ error_init = compute_rotation_RMSE(Rinit, Rgt);
 %% Test implementation of Riemannian Newton in matlab_utils
 newton_opts = struct;
 newton_opts.rotation_distance = 'chordal';
+newton_opts.tangent_space_parametrization = 'global';
 newton_opts.gradnorm_tol = 1e-6;
 newton_opts.lambda = 0;
 newton_opts.max_iterations = 50;

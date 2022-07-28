@@ -8,10 +8,10 @@ function [gi, gj, Hii, Hjj, Hij] = differentiate_relative_rotation_measurement_2
 
 % Compute error residual
 RError = (Ri * Rij)' * Rj;
-thetaij = atan2(RError(2,1), RError(1,1));
+thetaij = log2d(RError);
 
 % Compute Riemannian gradient
-grad_angular_dist = [-1; 1];   
+grad_angular_dist = [-1; 1];  % gradient of the 2D angular distance is constant
 if strcmp(options.rotation_distance, 'chordal')
     fdot_theta = 2 * sin(thetaij);
     fddot_theta = 2 * cos(thetaij);
