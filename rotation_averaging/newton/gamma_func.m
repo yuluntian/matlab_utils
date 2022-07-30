@@ -6,6 +6,12 @@ if strcmp(options.rotation_distance, 'chordal')
     else
         gamma = 2*cos(theta) - alpha_func(theta, options);
     end
+elseif strcmp(options.rotation_distance, 'geodesic')
+    if abs(theta) < 1e-12
+        gamma = 0;
+    else
+        gamma = 1 - 0.5 * theta * cot(theta/2);
+    end
 else
     error('Unknown rotation distance: %s', options.rotation_distance);
 end

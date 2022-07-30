@@ -1,6 +1,7 @@
 % function [gi, gj, Hii, Hjj, Hij] = differentiate_relative_rotation_measurement_2d(Ri, Rj, Rij, kappa, options)
 % Compute the Riemannian gradient and optionally the Riemannian Hessian of
 % a relative measurement between two 2D rotations Ri and Rj.
+% f(R_i, R_j) = 0.5 * kappa * dist(Ri Rij, Rj)^2
 % 
 % 
 % Yulun Tian
@@ -15,6 +16,9 @@ grad_angular_dist = [-1; 1];  % gradient of the 2D angular distance is constant
 if strcmp(options.rotation_distance, 'chordal')
     fdot_theta = 2 * sin(thetaij);
     fddot_theta = 2 * cos(thetaij);
+elseif strcmp(options.rotation_distance, 'geodesic')
+    fdot_theta = thetaij;
+    fddot_theta = 1;
 else
     error('Unknown rotation distance: %s!', options.rotation_distance)
 end
