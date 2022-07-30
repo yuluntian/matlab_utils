@@ -30,7 +30,7 @@ sim_opts.num_rows = 5;
 sim_opts.num_cols = 5;
 sim_opts.num_floors = 5;
 sim_opts.t_stddev = 0;
-sim_opts.deg_stddev = 10;
+sim_opts.deg_stddev = 0;
 [measurements, true_pose, gt_info] = simulate_single_grid_pgo(sim_opts);
 Rgt = [true_pose.R{:}];
 
@@ -38,17 +38,17 @@ Rgt = [true_pose.R{:}];
 [Rchordal, ~] = chordal_initialization(measurements);
 R0 = rotations_flat_to_tensor(Rchordal);
 % Perturb initial rotation by small noise
-% for i = 1:size(R0,3)
-%     dR = Langevin_sampler_3D(eye(3), 1e5);
-%     R0(:,:,i) = R0(:,:,i) * dR;
-% end
+for i = 1:size(R0,3)
+    dR = Langevin_sampler_3D(eye(3), 1e2);
+    R0(:,:,i) = R0(:,:,i) * dR;
+end
 Rinit = rotations_tensor_to_flat(R0);
 error_init = compute_rotation_RMSE(Rinit, Rgt);
 
 %% Test implementation of Riemannian Newton in matlab_utils
 newton_opts = struct;
 newton_opts.rotation_distance = 'chordal';
-newton_opts.tangent_space_parametrization = 'global';
+newton_opts.tangent_space_parametrization = 'local';
 newton_opts.gradnorm_tol = 1e-6;
 newton_opts.lambda = 0;
 newton_opts.max_iterations = 50;
