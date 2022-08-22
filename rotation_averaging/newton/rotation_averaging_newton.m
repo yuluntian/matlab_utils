@@ -19,6 +19,16 @@ end
 if ~isfield(options, 'tangent_space_parametrization')
     options.tangent_space_parametrization = 'local';
 end
+if ~isfield(options, 'quotient_optimization')
+    options.quotient_optimization = false;
+end
+if ~isfield(options, 'pcg_tolerance')
+    options.pcg_tolerance = 1e-6;
+end
+if ~isfield(options, 'pcg_maxit')
+    options.pcg_maxit = 50;
+end
+
 d = size(measurements.R{1}, 1);
 n = max(max(measurements.edges));
 assert(d == 2 || d == 3, 'Rotation averaging problem must be 2D or 3D.');
@@ -27,6 +37,35 @@ if d == 2
 else
     p = 3;
 end
+
+if options.quotient_optimization
+    fprintf('Performing optimization on quotient manifold.\n');
+    options.tangent_space_parametrization = 'global';
+    % form orthonormal basis of vertical space
+    N = kron(ones(n,1), speye(p));
+    for i = 1:p
+        N(:,i) = N(:,i) / norm(N(:,i));
+    end
+    % orthogonal projection operator onto the horizontal space
+    Ph_func = @(x) x - N * (N' * x);
+    if options.lambda > 0
+        warning('Ignoring regularization when optimizing on quotient manifold.');
+    end
+    
+end
+
+% Form preconditioner for PCG
+% Use regularized laplacian as preconditioner
+if strcmp(options.rotation_distance, 'geodesic')
+    weights = [measurements.kappa{:}];
+elseif strcmp(options.rotation_distance, 'chordal')
+    weights = 2 * [measurements.kappa{:}];
+else
+    error('Unknown rotation distance: %s', options.rotation_distance);
+end
+L = construct_weighted_laplacian(1:n, measurements.edges, weights);
+% Regularization is needed to make sure preconditioner is PD
+Mp = kron(L + 1e-8 * speye(n), speye(p));
 
 for iter = 1 : options.max_iterations 
     cost = evaluate_rotation_averaging_cost(measurements, R, options);
@@ -37,9 +76,35 @@ for iter = 1 : options.max_iterations
                    iter, cost, gradnorm);
         break;
     end
+    
     % Solve Newton system
-    H = Hess + options.lambda * speye(p * n);
-    x = - H \ grad;
+    % Since the Hessian is always singular (and also dense when using
+    % quotient optimization), we will use PCG
+    if ~options.quotient_optimization
+        % Ignore the quotient structure and perform Newton's method in the total space
+        H = Hess + options.lambda * speye(p * n);
+        x = pcg(H, ...
+                     -grad, ...
+                     options.pcg_tolerance, ...
+                     options.pcg_maxit, ...
+                     Mp);
+    else
+        % Account for the quotient structure by find the min norm solution to: 
+        % (Ph H Ph)x = -grad, 
+        % where Ph is the orthogonal projection onto the horizontal space; see [Boumal, eq (9.55)]
+        
+        % Since the left handside matrix is dense, we will use PCG to avoid
+        % explicitly forming the quotient space Hessian
+        QH_func = @(x) Ph_func(Hess * Ph_func(x));
+        x_pcg = pcg(QH_func, ...
+                            -grad, ...
+                            options.pcg_tolerance, ...
+                            options.pcg_maxit, ...
+                            Mp);  
+
+        % Project the solution to the horitontal space
+        x = Ph_func(x_pcg);
+    end
     % Apply tangent space solution
     R = rotation_averaging_exp(R, x, options);
     fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
