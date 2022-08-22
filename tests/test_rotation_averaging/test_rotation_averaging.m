@@ -52,22 +52,23 @@ newton_opts.tangent_space_parametrization = 'local';
 newton_opts.gradnorm_tol = 1e-6;
 newton_opts.lambda = 0;
 newton_opts.max_iterations = 50;
+newton_opts.quotient_optimization = true;
 RNewton = rotation_averaging_newton(measurements, Rinit, newton_opts);
 error_newton = compute_rotation_RMSE(RNewton, Rgt);
 
 %% Test verification on correct solution
+fprintf('\nNewton: \n')
 verify_opts = struct;
 verify_opts.verbose = false;
 [is_optimal, verify_info] = certify_chordal_rotation_averaging(measurements, RNewton, verify_opts);
-fprintf('\nNewton: \n')
 fprintf('is_optimal: %i, lambda_min: %.3e, max multiplier symerror: %.3e\n', is_optimal, verify_info.lambda_min, max(verify_info.multiplier_symmetric_errors));
 
 %% Test verification on suboptimal solutions
+fprintf('\nRandom: \n')
 % Use random initialization
 M = rotationsfactory(3, size(R0,3));
 Rrand = rotations_tensor_to_flat(M.rand());
 [is_optimal, verify_info] = certify_chordal_rotation_averaging(measurements, Rrand, verify_opts);
-fprintf('\nRandom: \n')
 fprintf('is_optimal: %i, lambda_min: %.3e, max multiplier symerror: %.3e\n', is_optimal, verify_info.lambda_min, max(verify_info.multiplier_symmetric_errors));
 
 fprintf('\nOk.\n')

@@ -37,6 +37,7 @@ newton_opts.tangent_space_parametrization = 'global';
 newton_opts.gradnorm_tol = 1e-6;
 newton_opts.lambda = 0;
 newton_opts.max_iterations = 50;
+newton_opts.quotient_optimization = true;
 RNewton = rotation_averaging_newton(measurements, Rinit, newton_opts);
 error_newton = compute_rotation_RMSE(RNewton, Rgt);
 
