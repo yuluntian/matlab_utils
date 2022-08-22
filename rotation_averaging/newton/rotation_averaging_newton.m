@@ -1,5 +1,14 @@
 % function R = rotation_averaging_newton(measurements, R, options)
-% A simple implementation of the Newton method for 3D rotation averaging
+% A simple implementation of the Newton method for 2D/3D rotation
+% averaging. 
+% 
+% This function supports optimization on the underlying quotient manifold (set
+% options.quotient_optimization = true). In this case, the preconditioned conjugate
+% gradient (PCG) is used to solve the Newton systems. When quotient
+% optimization is disabled, the backslash oprator is used instead, which
+% could be numerically unstable.
+%
+% Yulun Tian
 function R = rotation_averaging_newton(measurements, R, options)
 if nargin < 3
     options = struct;
@@ -51,21 +60,18 @@ if options.quotient_optimization
     if options.lambda > 0
         warning('Ignoring regularization when optimizing on quotient manifold.');
     end
-    
+    % Use regularized laplacian as preconditioner
+    if strcmp(options.rotation_distance, 'geodesic')
+        weights = [measurements.kappa{:}];
+    elseif strcmp(options.rotation_distance, 'chordal')
+        weights = 2 * [measurements.kappa{:}];
+    else
+        error('Unknown rotation distance: %s', options.rotation_distance);
+    end
+    L = construct_weighted_laplacian(1:n, measurements.edges, weights);
+    % Regularization is needed to make sure preconditioner is PD
+    Mp = kron(L + 1e-8 * speye(n), speye(p));
 end
-
-% Form preconditioner for PCG
-% Use regularized laplacian as preconditioner
-if strcmp(options.rotation_distance, 'geodesic')
-    weights = [measurements.kappa{:}];
-elseif strcmp(options.rotation_distance, 'chordal')
-    weights = 2 * [measurements.kappa{:}];
-else
-    error('Unknown rotation distance: %s', options.rotation_distance);
-end
-L = construct_weighted_laplacian(1:n, measurements.edges, weights);
-% Regularization is needed to make sure preconditioner is PD
-Mp = kron(L + 1e-8 * speye(n), speye(p));
 
 for iter = 1 : options.max_iterations 
     cost = evaluate_rotation_averaging_cost(measurements, R, options);
@@ -83,11 +89,7 @@ for iter = 1 : options.max_iterations
     if ~options.quotient_optimization
         % Ignore the quotient structure and perform Newton's method in the total space
         H = Hess + options.lambda * speye(p * n);
-        x = pcg(H, ...
-                     -grad, ...
-                     options.pcg_tolerance, ...
-                     options.pcg_maxit, ...
-                     Mp);
+        x = - H \ grad;
     else
         % Account for the quotient structure by find the min norm solution to: 
         % (Ph H Ph)x = -grad, 
