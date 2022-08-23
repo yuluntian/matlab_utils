@@ -3,24 +3,19 @@
 % Returns the 3-vector that corresponds to the element of so(3)
 % with rotation angle less than pi
 % 
-% Reference: Sec 7.1, Barfoot state estimation for robotics
+% Reference: Ethan Eade, "Lie Groups for 2D and 3D Transformations"
 %
 % Yulun Tian
 function w = log3d(R)
 assert(size(R,1) == 3);
 assert(size(R,2) == 3);
 
-% find the eigenvector corresponding to eigenvalue 1
-[axis, eigval] = eigs(R - eye(3), 1, 'smallestabs');
-assert(abs(eigval) < 1e-10);
-
-angle = acos((trace(R)-1)/2);
-assert(angle < pi + 1e-10);
-w = angle * axis;
-
-% flip axis if needed
-R_ = exp3d(w);
-if norm(R-R_,'fro') > 1e-8
-    w = -w;
+theta = acos((trace(R)-1)/2);
+if theta < 1e-12
+    w = zeros(3,1);
+else
+    w = vee3(theta * (R - R') / (2 * sin(theta)));
 end
+
+
 end

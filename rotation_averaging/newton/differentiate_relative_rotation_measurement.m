@@ -9,10 +9,9 @@
 % Yulun Tian
 function [gi, gj, Hii, Hjj, Hij] = differentiate_relative_rotation_measurement(Ri, Rj, Rij, kappa, options)
 
-SO = rotationsfactory(3);
 % Compute error residual
 RError = (Ri * Rij)' * Rj;
-uij = vee3(SO.log(eye(3), RError));
+uij = log3d(RError);
 thetaij = norm(uij);
 if abs(thetaij) < 1e-12
     % Treat this error as zero
