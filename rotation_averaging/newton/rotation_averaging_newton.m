@@ -88,6 +88,10 @@ for iter = 1 : options.max_iterations
     % quotient optimization), we will use PCG
     if ~options.quotient_optimization
         % Ignore the quotient structure and perform Newton's method in the total space
+        % Without regularization, this could be numerically unstable! 
+        if options.lambda == 0
+            warning('Solving Newton system using backslash could be unstable!');
+        end
         H = Hess + options.lambda * speye(p * n);
         x = - H \ grad;
     else
