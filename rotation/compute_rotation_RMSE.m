@@ -9,13 +9,12 @@ function error_degree = compute_rotation_RMSE(Ropt, R)
 d = size(R,1);
 n = size(R,2) / d;
 
-assert(d==3, 'This function currently only supports 3D rotation');
-
 squared_error = compute_rotation_orbit_distance(Ropt, R).^2;
 
 % root mean squared error (Chordal)
 error_chordal = sqrt(squared_error/n);
 
-error_degree = chordal_to_angular_3d(error_chordal);
+% convert chordal distance to degree
+error_degree = rad2deg(chordal_to_angular(error_chordal));
 
 end
