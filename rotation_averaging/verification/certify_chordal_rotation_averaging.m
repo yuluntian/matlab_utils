@@ -43,11 +43,12 @@ for k = 1:m
     j = edges(k,2);
     assert(i~=j);
     Rij = measurements.R{k};
+    check_rotation_matrix(Rij);
     kappa = measurements.kappa{k};
     idxs = (i-1)*d + 1 : i*d;
     jdxs = (j-1)*d + 1 : j*d;
-    RTilde(idxs, jdxs) = kappa * Rij;
-    RTilde(jdxs, idxs) = kappa * Rij';
+    RTilde(idxs, jdxs) = RTilde(idxs, jdxs) + kappa * Rij;
+    RTilde(jdxs, idxs) = RTilde(jdxs, idxs) + kappa * Rij';
 end
 [RTilde, sym_error] = make_symmetric(RTilde);
 assert(sym_error < 1e-6);  % data matrix should always be symmetric
