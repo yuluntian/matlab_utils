@@ -1,4 +1,4 @@
-% function R = rotation_averaging_newton(measurements, R, options)
+% function [R, info] = rotation_averaging_newton(measurements, R, options)
 % A simple implementation of the Newton method for 2D/3D rotation
 % averaging. 
 % 
@@ -9,7 +9,7 @@
 % could be numerically unstable.
 %
 % Yulun Tian
-function R = rotation_averaging_newton(measurements, R, options)
+function [R, info] = rotation_averaging_newton(measurements, R, options)
 if nargin < 3
     options = struct;
 end
@@ -46,6 +46,7 @@ if d == 2
 else
     p = 3;
 end
+info = struct;
 
 if options.quotient_optimization
     fprintf('Performing optimization on quotient manifold.\n');
@@ -74,11 +75,19 @@ if options.quotient_optimization
     Mp = kron(L + precon_lambda * speye(n), speye(p));
 end
 
-for iter = 1 : options.max_iterations 
+% Number of Newton steps done.
+iter = 0; 
+info.cost = [];
+info.gradnorm = [];
+info.iterations = [];
+while true
     cost = evaluate_rotation_averaging_cost(measurements, R, options);
     [grad, Hess] = differentiate_rotation_averaging(measurements, R, options);
     gradnorm = norm(grad);
-    if gradnorm < options.gradnorm_tol
+    info.iterations(end+1) = iter;
+    info.cost(end+1) = cost;
+    info.gradnorm(end+1) = gradnorm;
+    if iter >= options.max_iterations || gradnorm < options.gradnorm_tol
         fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
         break;
@@ -116,6 +125,8 @@ for iter = 1 : options.max_iterations
     R = rotation_averaging_exp(R, x, options);
     fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
               iter, cost, gradnorm, norm(x));
+
+    iter = iter + 1;
 end
 
 end
