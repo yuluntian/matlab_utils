@@ -70,7 +70,8 @@ if options.quotient_optimization
     end
     L = construct_weighted_laplacian(1:n, measurements.edges, weights);
     % Regularization is needed to make sure preconditioner is PD
-    Mp = kron(L + 1e-8 * speye(n), speye(p));
+    precon_lambda = min(1e-8, options.gradnorm_tol);
+    Mp = kron(L + precon_lambda * speye(n), speye(p));
 end
 
 for iter = 1 : options.max_iterations 
