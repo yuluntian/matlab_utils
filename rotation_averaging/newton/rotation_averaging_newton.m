@@ -31,6 +31,10 @@ end
 if ~isfield(options, 'quotient_optimization')
     options.quotient_optimization = false;
 end
+if ~isfield(options, 'use_pcg')
+    % Use PCG to solve Newton system
+    options.use_pcg = true;
+end
 if ~isfield(options, 'pcg_tolerance')
     options.pcg_tolerance = 1e-6;
 end
@@ -51,6 +55,7 @@ info = struct;
 if options.quotient_optimization
     fprintf('Performing optimization on quotient manifold.\n');
     options.tangent_space_parametrization = 'global';
+    options.use_pcg = true;
     % form orthonormal basis of vertical space
     N = kron(ones(n,1), speye(p));
     for i = 1:p
@@ -60,6 +65,7 @@ if options.quotient_optimization
     Ph_func = @(x) x - N * (N' * x);
     if options.lambda > 0
         warning('Ignoring regularization when optimizing on quotient manifold.');
+        options.lambda = 0;
     end
     % Use regularized laplacian as preconditioner
     if strcmp(options.rotation_distance, 'geodesic')
@@ -98,12 +104,22 @@ while true
     % quotient optimization), we will use PCG
     if ~options.quotient_optimization
         % Ignore the quotient structure and perform Newton's method in the total space
-        % Without regularization, this could be numerically unstable! 
-        if options.lambda == 0
-            warning('Solving Newton system using backslash could be unstable!');
-        end
         H = Hess + options.lambda * speye(p * n);
-        x = - H \ grad;
+        if options.use_pcg
+            % Solve Newton system via PCG
+            precon_lambda = min(1e-8, options.gradnorm_tol);
+            x = pcg(H, ...
+                    -grad, ...
+                    options.pcg_tolerance, ...
+                    options.pcg_maxit, ...
+                    H + precon_lambda * speye(size(H,1)));  
+        else
+            % Without regularization, this could be numerically unstable! 
+            if options.lambda == 0
+                warning('Solving Newton system using backslash could be unstable!');
+            end
+            x = - H \ grad;
+        end
     else
         % Account for the quotient structure by find the min norm solution to: 
         % (Ph H Ph)x = -grad, 
@@ -113,10 +129,10 @@ while true
         % explicitly forming the quotient space Hessian
         QH_func = @(x) Ph_func(Hess * Ph_func(x));
         x_pcg = pcg(QH_func, ...
-                            -grad, ...
-                            options.pcg_tolerance, ...
-                            options.pcg_maxit, ...
-                            Mp);  
+                    -grad, ...
+                    options.pcg_tolerance, ...
+                    options.pcg_maxit, ...
+                    Mp);  
 
         % Project the solution to the horitontal space
         x = Ph_func(x_pcg);

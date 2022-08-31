@@ -8,5 +8,6 @@ assert(size(Y,2) == d*n);
 [U,S,V] = svd(X*Y');
 E = eye(d);
 E(d,d) = det(U*V');
-distance = sqrt(2*d*n - 2*trace(E*S));
+sq_dist = max(2*d*n - 2*trace(E*S), 0);
+distance = sqrt(sq_dist);
 end
