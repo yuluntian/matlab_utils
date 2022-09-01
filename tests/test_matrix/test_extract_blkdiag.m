@@ -1,6 +1,7 @@
 clear; clc; close all;
 
-bdims = [1 4 3];
-n = sum(bdims);
+p = 2;
+num_blocks = 4;
+n = p * num_blocks;
 A = randn(n,n);
-D = extract_blkdiag_matrix(A, bdims);
+D = extract_blkdiag_matrix(A, p);

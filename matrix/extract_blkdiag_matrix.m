@@ -1,13 +1,19 @@
-% function [D, blocks] = extract_blkdiag_matrix(A, bdims)
-% Given a block-structured square matrix A with block size specified by
-% bdims(1), ..., bdims(n), return matrix D consisting of the diagonal blocks of A.
+% function [D, blocks] = extract_blkdiag_matrix(A, block_size)
+% Given a block-structured square matrix A, 
+% return matrix D consisting of the diagonal blocks of A.
 %
 % Yulun Tian
-function [D, blocks] = extract_blkdiag_matrix(A, bdims)
+function [D, blocks] = extract_blkdiag_matrix(A, block_size)
 n = size(A,1);
 assert(n == size(A,2));
+if length(block_size) > 1
+    num_blocks = length(block_size);
+    bdims = block_size;
+else
+    num_blocks = n / block_size;
+    bdims = block_size * ones(1, num_blocks);
+end
 assert(n == sum(bdims));
-num_blocks = length(bdims);
 blocks = cell(1, num_blocks);
 
 for block_id = 1:num_blocks
