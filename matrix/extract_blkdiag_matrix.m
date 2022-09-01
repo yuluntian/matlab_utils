@@ -1,6 +1,10 @@
 % function [D, blocks] = extract_blkdiag_matrix(A, block_size)
-% Given a block-structured square matrix A, 
-% return matrix D consisting of the diagonal blocks of A.
+% Given a block-structured square matrix A, return matrix D consisting of the diagonal blocks of A.
+% Input:
+%   A: input matrix
+%   block_size: if a scalar, it is assumed that all blocks have the same
+%   size. If a vector, then block_size(i) is the dimension of the i-th
+%   block.
 %
 % Yulun Tian
 function [D, blocks] = extract_blkdiag_matrix(A, block_size)
