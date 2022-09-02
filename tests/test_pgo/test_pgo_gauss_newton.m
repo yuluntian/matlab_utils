@@ -7,7 +7,7 @@ addpath(genpath(dc2pgo_path));
 
 %% Main
 dataset_dir = '/home/yulun/git/dc2_pgo/data';
-g2o_file = fullfile(dataset_dir, 'parking-garage.g2o');
+g2o_file = fullfile(dataset_dir, 'input_M3500_g2o.g2o');
 measurements = load_g2o_data(g2o_file);
 [R,t] = chordal_initialization(measurements);
 
@@ -15,4 +15,13 @@ gn_options = struct;
 gn_options.tangent_space_parametrization = 'global';
 gn_options.lambda = 1e-5;
 gn_options.gradnorm_tol = 1e-4;
-pgo_gauss_newton(measurements, R, t, gn_options);
+[Rgn, tgn, info_gn] = pgo_gauss_newton(measurements, R, t, gn_options);
+
+% SE-Sync reference
+[SDPval, Yopt, xhat, Fxhat, SE_Sync_info, problem_data] = SE_Sync(measurements);
+
+error_rot = compute_rotation_RMSE(xhat.R, Rgn);
+error_trans = compute_ATE(xhat.t, tgn);
+
+assert(error_rot < 1e-4);
+assert(error_trans < 1e-4);

@@ -31,21 +31,25 @@ options.tangent_space_parametrization = 'local';
 
 % Save optimization stats
 info = struct;
+iter = 0;
 info.costs = [];
 info.gradnorms = [];
+info.iterations = [];
 if isfield(options, 'eval_func')
     info.eval_results = [];
 end
-for iter = 1 : options.max_iterations 
+while true
     cost = evaluate_pgo_cost(measurements, R, t, options);
     [grad, Hess] = differentiate_pgo(measurements, R, t, options);
     gradnorm = norm(grad);
-    info.costs(iter) = cost;
-    info.gradnorms(iter) = gradnorm;
+    info.iterations(end+1) = iter;
+    info.costs(end+1) = cost;
+    info.gradnorms(end+1) = gradnorm;
     if isfield(options, 'eval_func')
         info.eval_results = [info.eval_results options.eval_func(R, t)];
     end
-    if gradnorm < options.gradnorm_tol
+    if iter >= options.max_iterations || ...
+        gradnorm < options.gradnorm_tol
         fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
         break;
@@ -57,7 +61,7 @@ for iter = 1 : options.max_iterations
     [R, t] = pgo_exp(R, t, x, options);
     fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
               iter, cost, gradnorm, norm(x));
+    iter = iter + 1;
 end
 fprintf('=== End PGO Newton ===\n\n');
-info.numiters = length(info.costs);
 end

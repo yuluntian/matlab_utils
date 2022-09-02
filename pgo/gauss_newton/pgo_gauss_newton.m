@@ -1,5 +1,5 @@
-% function [R,t] = chordal_pgo_gauss_newton_2d(measurements, R, t, options)
-% A simple Gauss-Newton solver for 2D pose graph optimization.
+% function [R, t, info] = pgo_gauss_newton(measurements, R, t, options)
+% A simple Gauss-Newton solver for 2D/3D pose graph optimization.
 % 
 % Yulun Tian
 function [R, t, info] = pgo_gauss_newton(measurements, R, t, options)
@@ -25,24 +25,25 @@ end
 
 % Save optimization stats
 info = struct;
+info.iterations = [];
 info.costs = [];
 info.gradnorms = [];
 if isfield(options, 'eval_func')
     info.eval_results = [];
 end
-iter = 1;
+iter = 0;
 while true
     [r, J, W] = linearize_pgo(measurements, R, t, options);
     cost = evaluate_pgo_cost(measurements, R, t);
     g = differentiate_pgo(measurements, R, t);
     gradnorm = norm(g);
-    info.costs(iter) = cost;
-    info.gradnorms(iter) = gradnorm;
-    info.eval_results = [info.eval_results options.eval_func(R, t)];
-    if iter > options.max_iterations
-        break;
+    info.iterations(end+1) = iter;
+    info.costs(end+1) = cost;
+    info.gradnorms(end+1) = gradnorm;
+    if isfield(options, 'eval_func')
+        info.eval_results = [info.eval_results options.eval_func(R, t)];
     end
-    if gradnorm < options.gradnorm_tol
+    if iter >= options.max_iterations || gradnorm < options.gradnorm_tol
         break;
     end
     % Solve Gauss-Newton system
@@ -59,5 +60,4 @@ end
 fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
 fprintf('=== End PGO Gauss-Newton ===\n\n');
-info.numiters = length(info.costs);
 end
