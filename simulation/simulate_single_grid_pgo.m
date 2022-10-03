@@ -1,3 +1,5 @@
+% function [measurements, true_pose, gt_info] = simulate_single_grid_pgo(options)
+% Yulun Tian
 function [measurements, true_pose, gt_info] = simulate_single_grid_pgo(options)
 if nargin < 1
     options = struct;
@@ -18,9 +20,6 @@ if ~isfield(options, 'num_columns')
 end
 if ~isfield(options, 'num_floors')
     options.num_floors = 3;
-end
-if ~isfield(options, 'velocity')
-    options.velocity = 1;
 end
 if ~isfield(options, 'fov')
     options.fov = 1.1;
@@ -57,7 +56,6 @@ num_columns = options.num_columns;
 num_floors = options.num_floors;
 num_poses_per_floor = num_rows * num_columns;
 num_poses = num_poses_per_floor * num_floors;
-velocity = options.velocity;
 fov = options.fov;
 lc_prob = options.lc_prob;
 t_stddev = options.t_stddev; % standard deviation of translation measurements in meter
@@ -97,7 +95,7 @@ for floor = 1:num_floors
            vertex_to_index(row, col, floor) = index;
            
            % translation confined to be on the 3D grid
-           true_pose.t{index} = offset + velocity * [row; col; floor];
+           true_pose.t{index} = offset + [row; col; floor];
            
        end
     end
