@@ -86,6 +86,9 @@ iter = 0;
 info.cost = [];
 info.gradnorm = [];
 info.iterations = [];
+if isfield(options, 'eval_func')
+    info.eval_results = [];
+end
 while true
     cost = evaluate_rotation_averaging_cost(measurements, R, options);
     [grad, Hess] = differentiate_rotation_averaging(measurements, R, options);
@@ -93,6 +96,9 @@ while true
     info.iterations(end+1) = iter;
     info.cost(end+1) = cost;
     info.gradnorm(end+1) = gradnorm;
+    if isfield(options, 'eval_func')
+        info.eval_results = [info.eval_results options.eval_func(R)];
+    end
     if iter >= options.max_iterations || gradnorm < options.gradnorm_tol
         fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
