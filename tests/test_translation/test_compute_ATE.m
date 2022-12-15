@@ -11,6 +11,12 @@ for trial = 1:100
     
     t_dst = transform_translations(t_src, transform);
     
+    % Check estimated transform is correct
+    [transform_est, t_aligned] = align_translations(t_src, t_dst);
+    assert(norm(transform_est.R - transform.R, 'fro') < 1e-8);
+    assert(norm(transform_est.t - transform.t) < 1e-8);
+    
+    % Check ATE computation is correct
     ATE = compute_ATE(t_src, t_dst);
     assert(ATE < 1e-8);
     

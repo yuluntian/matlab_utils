@@ -1,4 +1,4 @@
-% function [T_dst_src, translations_src_aligned] = align_translations(translations_src, translations_dst)
+% function [T_dst_src, translations_src_aligned, info] = align_translations(translations_src, translations_dst)
 % Given two sets of points in different global frames, find the rigid-body
 % transformation that transform points in the src frame to points in the
 % dst frame and minimizes the squared error.
@@ -11,7 +11,7 @@
 % 
 % Yulun Tian 
 
-function [T_dst_src, translations_src_aligned] = align_translations(translations_src, translations_dst)
+function [T_dst_src, translations_src_aligned, info] = align_translations(translations_src, translations_dst)
 
 d = size(translations_src, 1);
 n = size(translations_src, 2);
@@ -41,5 +41,12 @@ T_dst_src.t = t_dst_src;
 
 % return aligned translations
 translations_src_aligned = R_dst_src * translations_src + repmat(t_dst_src, 1, n);
+
+% compute root mean squared error of registration
+info = struct;
+distances = vecnorm(translations_src_aligned - translations_dst, 2, 1);
+distances_squared = distances.*distances;
+info.RMSE = sqrt(mean(distances_squared));
+
 end
 
