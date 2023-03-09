@@ -11,8 +11,15 @@ end
 if ~isfield(options, 'rotation_distance')
     options.rotation_distance = 'chordal';
 end
-d = size(measurements.t{1},1); assert(d == 3);
-p = 6;
+d = size(measurements.t{1},1); 
+assert(d==2 || d == 3);
+if d == 2
+    diff_func = @differentiate_relative_pose_measurement_2d;
+    p = 3;
+else
+    diff_func = @differentiate_relative_pose_measurement;
+    p = 6;
+end
 n = max(max(measurements.edges));
 m = size(measurements.edges, 1);
 g = zeros(p*n, 1);
@@ -42,9 +49,9 @@ for k = 1:m
     idxs_ = ((i-1)*p+1) : i*p;
     jdxs_ = ((j-1)*p+1) : j*p;
     if nargout == 1
-        [gi, gj] = differentiate_relative_pose_measurement(Ri, ti, Rj, tj, Rij, tij, kappa, tau, options);
+        [gi, gj] = diff_func(Ri, ti, Rj, tj, Rij, tij, kappa, tau, options);
     else
-        [gi, gj, Hii, Hij, Hjj] = differentiate_relative_pose_measurement(Ri, ti, Rj, tj, Rij, tij, kappa, tau, options);
+        [gi, gj, Hii, Hij, Hjj] = diff_func(Ri, ti, Rj, tj, Rij, tij, kappa, tau, options);
         % Assemble Hii
         row_offset = (i-1)*p;
         col_offset = (i-1)*p;

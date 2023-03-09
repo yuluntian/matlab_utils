@@ -25,8 +25,12 @@ n = max(max(measurements.edges));
 
 % Currently, this implementation only supports 3D and local tangent space
 % parametrization
-assert(d == 3, 'PGO problem is not 3D.');
-p = 6;
+assert(d==2 || d == 3, 'PGO problem must be 2D or 3D.');
+if d == 2
+    p = 3;
+else
+    p = 6;
+end
 options.tangent_space_parametrization = 'local';
 
 % Save optimization stats
