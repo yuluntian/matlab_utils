@@ -1,6 +1,14 @@
 % function [measurements, true_pose, blocks] = simulate_multi_grid_pgo(sim_opts)
 % Yulun Tian
 function [measurements, true_pose, blocks] = simulate_multi_grid_pgo(sim_opts)
+% SUPPORT FOR SIMULATING OUTLIER MEASUREMENTS
+% Percentage of outliers within all loop closures
+if ~isfield(sim_opts, 'lc_outlier_prob')
+    sim_opts.lc_outlier_prob = 0;
+end
+lc_outlier_prob = sim_opts.lc_outlier_prob;
+assert(lc_outlier_prob >= 0 && lc_outlier_prob <= 1);
+%% Read settings
 num_robot_rows = sim_opts.num_robot_rows;
 num_robot_columns = sim_opts.num_robot_columns;
 num_rows = sim_opts.num_rows; % height of a single grid
@@ -10,8 +18,6 @@ inter_lc_prob = sim_opts.inter_lc_prob; % probability of inter-robot loop closur
 fov = sim_opts.fov; % field of view, within which loop closure is sampled
 t_stddev = sim_opts.t_stddev; % translational measurement standard deviation (meter)
 deg_stddev = sim_opts.deg_stddev; % rotational measurement standard deviation (degree)
-
-
 rad_stddev = deg2rad(deg_stddev); % standard deviation of rotation measurements in radian
 tau = 1/(t_stddev.^2); % translational measurement weights
 kappa = (1/rad_stddev.^2)/2; % rotational measurement weights
@@ -84,9 +90,19 @@ for r1 = 1:num_robots
                     dR = dT(1:3,1:3);
                     dt = dT(1:3,end);
 
-                    % simulate noisy measurements
-                    error_t = normrnd(0, t_stddev, [3,1]);
-                    error_R = Langevin_sampler_3D(eye(3), kappa);
+                    % determine if this measurement is an outlier
+                    is_outlier = randsample([true false],1,true,...
+                                            [lc_outlier_prob, 1-lc_outlier_prob]);
+                    if is_outlier
+                        % simulate outlier noise
+                        error_t = -10 + 20*rand(3,1);
+                        error_R = randrot(3,1);
+                    else
+                        % simulate noisy measurements
+                        error_t = normrnd(0, t_stddev, [3,1]);
+                        error_R = Langevin_sampler_3D(eye(3), kappa);
+                    end
+
                     measurements.t{edge_id} = dt + error_t;
                     measurements.R{edge_id} = dR * error_R;
                     measurements.tau{edge_id} = tau;
