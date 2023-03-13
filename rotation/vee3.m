@@ -5,7 +5,11 @@ function w = vee3(W)
 
 assert(size(W, 1) == 3);
 assert(size(W, 2) == 3);
-assert(issymmetric(W, 'skew'));
+%assert(issymmetric(W, 'skew'));
+ss_err = norm(W+W', 'fro');
+if ss_err > 1e-6
+    warning('Input is not skew-symmetric!');
+end
 
 w = [W(3,2);
      W(1,3);

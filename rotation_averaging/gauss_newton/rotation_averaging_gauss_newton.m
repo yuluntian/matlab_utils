@@ -3,7 +3,7 @@
 % 
 % Yulun Tian
 function [R, info] = rotation_averaging_gauss_newton(measurements, R, options)
-fprintf('=== Begin Rotation Averaging Gauss-Newton ===\n\n');
+%fprintf('=== Begin Rotation Averaging Gauss-Newton ===\n\n');
 if nargin < 3
     options = struct;
 end
@@ -21,6 +21,9 @@ if ~isfield(options, 'max_iterations')
 end
 if ~isfield(options, 'gradnorm_tol')
     options.gradnorm_tol = 1e-2;
+end
+if ~isfield(options, 'verbose')
+    options.verbose = true;
 end
 
 % Save optimization stats
@@ -52,12 +55,19 @@ while true
     x = - H \ grad;
     % Apply tangent space solution
     R = rotation_averaging_exp(R, x, options);
-    fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
-             iter, cost, gradnorm, norm(x));
+    if options.verbose
+        fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
+                 iter, cost, gradnorm, norm(x));
+    end
     iter = iter + 1;
 end
-
-fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
-                   iter, cost, gradnorm);
-fprintf('=== End Rotation Averaging Gauss-Newton ===\n\n');
+if options.verbose
+    fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
+                       iter, cost, gradnorm);
+end
+if gradnorm > info.gradnorms(1)
+    warning('Terminate with larger gradient norm: %.3e vs init %.3e', ...
+        gradnorm, info.gradnorms(1));
+end
+%fprintf('=== End Rotation Averaging Gauss-Newton ===\n\n');
 end
