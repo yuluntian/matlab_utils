@@ -15,6 +15,14 @@ degrees = diag(L);
 D = spdiags(degrees, 0, n, n);
 A = D - L;
 
+% Should be symmetric
+sym_err = norm(L - L', 'fro') / n;
+if sym_err > 1e-8
+    result = false;
+    warning('Laplacian is not sufficiently symmetric.')
+    return;
+end
+
 % All weights in adjacency matrix should be nonnegative
 if ~all(A >= 0, 'all')
     result = false;
@@ -24,9 +32,10 @@ end
 
 % Diagonal should contain sum of edge weights for each vertex
 tmp = sum(L, 2);
-if norm(tmp) > 1e-10
+row_sum_err = norm(tmp);
+if row_sum_err/n > 1e-8
     result = false;
-    warning('Row sum does not equal zero')
+    warning('Row sum does not equal zero: %.3e', row_sum_err)
     return;
 end
 
