@@ -3,10 +3,13 @@
 % for a 3D rotation averaging problem
 % 
 % Yulun Tian
-function [g, H] = differentiate_rotation_averaging(measurements, R, options)
+function [g, H] = differentiate_rotation_averaging(measurements, R, options, problem_data)
 
 if nargin < 3
     options = struct;
+end
+if nargin < 4
+    problem_data = struct;
 end
 if ~isfield(options, 'rotation_distance')
     options.rotation_distance = 'chordal';
@@ -17,6 +20,16 @@ end
 assert(strcmp(options.tangent_space_parametrization, 'local') || ...
            strcmp(options.tangent_space_parametrization, 'global') );
 
+% For chordal distance, if only gradient is needed and connection laplacian is also provided, 
+% use the faster method
+if nargout == 1 && strcmp(options.rotation_distance, 'chordal') && isfield(problem_data, 'ConLap')
+    g = differentiate_rotation_averaging_chordal(measurements, R, options, problem_data);
+    return;
+end
+
+% Use the default method, which is capable of also computing the exact
+% Hessian and works for geodesic distance. However, this implementation can
+% be slow if the problem has many edges.
 d = size(measurements.R{1}, 1);
 assert(d == 2 || d == 3);
 if d == 2

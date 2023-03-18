@@ -1,13 +1,25 @@
-% function cost = evaluate_rotation_averaging_cost(measurements, R, options)
+% function cost = evaluate_rotation_averaging_cost(measurements, R, options, problem_data)
 % Compute the cost of a rotation averaging problem
-function cost = evaluate_rotation_averaging_cost(measurements, R, options)
+function cost = evaluate_rotation_averaging_cost(measurements, R, options, problem_data)
 if nargin < 3
     options = struct;
+end
+if nargin < 4
+    problem_data = struct;
 end
 if ~isfield(options, 'rotation_distance')
     options.rotation_distance = 'chordal';
 end
 
+% For chordal distance, if connection laplacian is also provided, use the
+% faster method
+if strcmp(options.rotation_distance, 'chordal') && isfield(problem_data, 'ConLap')
+    cost = evaluate_rotation_averaging_cost_chordal(measurements, R, options, problem_data);
+    return;
+end
+
+% Use default implementation. This might be slow if the problem has many
+% edges.
 cost = 0;
 d = size(measurements.R{1},1); 
 n = max(max(measurements.edges));
@@ -29,3 +41,4 @@ end
 
 
 end
+
