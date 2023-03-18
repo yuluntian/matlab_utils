@@ -22,9 +22,13 @@ assert(strcmp(options.tangent_space_parametrization, 'local') || ...
 
 % For chordal distance, if only gradient is needed and connection laplacian is also provided, 
 % use the faster method
-if nargout == 1 && strcmp(options.rotation_distance, 'chordal') && isfield(problem_data, 'ConLap')
-    g = differentiate_rotation_averaging_chordal(measurements, R, options, problem_data);
-    return;
+if nargout == 1 && strcmp(options.rotation_distance, 'chordal')
+    if isfield(problem_data, 'ConLap')
+        g = differentiate_rotation_averaging_chordal(measurements, R, options, problem_data);
+        return
+    else
+        warning('For chordal distance, provide problem_data.ConLap to enable faster computation.')
+    end
 end
 
 % Use the default method, which is capable of also computing the exact

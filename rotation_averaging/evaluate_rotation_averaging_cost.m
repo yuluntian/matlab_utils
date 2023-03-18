@@ -13,9 +13,13 @@ end
 
 % For chordal distance, if connection laplacian is also provided, use the
 % faster method
-if strcmp(options.rotation_distance, 'chordal') && isfield(problem_data, 'ConLap')
-    cost = evaluate_rotation_averaging_cost_chordal(measurements, R, options, problem_data);
-    return;
+if strcmp(options.rotation_distance, 'chordal')  
+    if isfield(problem_data, 'ConLap')
+        cost = evaluate_rotation_averaging_cost_chordal(measurements, R, options, problem_data);
+        return;
+    else
+        warning('For chordal distance, provide problem_data.ConLap to enable faster computation.')
+    end
 end
 
 % Use default implementation. This might be slow if the problem has many
