@@ -12,15 +12,24 @@ c = zeros(1, 4*m);
 v = zeros(1, 4*m);
 assert(length(weights) == size(edges, 1));
 
+% Sanity check that nodes should be unique
+nodes_unique = unique(nodes);
+assert(length(nodes_unique) == n);
+
+% For each node, store the corresponding index
+node_to_index = zeros(max(nodes), 1);
+for idx = 1:n
+    node = nodes(idx);
+    node_to_index(node) = idx;
+end
+
 for k = 1:size(edges,1)
     offset = (k-1) * 4;
     v1 = edges(k,1);
     v2 = edges(k,2);
     w = weights(k);
-    i1 = find(nodes == v1);
-    i2 = find(nodes == v2);
-    assert(length(i1) == 1)
-    assert(length(i2) == 1)
+    i1 = node_to_index(v1);
+    i2 = node_to_index(v2);
     
     r(offset+1) = i1;
     c(offset+1) = i1;
