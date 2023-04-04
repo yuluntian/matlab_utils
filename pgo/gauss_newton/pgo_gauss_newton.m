@@ -3,7 +3,7 @@
 % 
 % Yulun Tian
 function [R, t, info] = pgo_gauss_newton(measurements, R, t, options)
-fprintf('=== Begin PGO Gauss-Newton ===\n\n');
+
 if nargin < 4
     options = struct;
 end
@@ -22,6 +22,11 @@ end
 if ~isfield(options, 'gradnorm_tol')
     options.gradnorm_tol = 1e-2;
 end
+if ~isfield(options, 'verbose')
+    options.verbose = true;
+end
+
+print_if(options.verbose, '=== Begin PGO Gauss-Newton ===\n\n');
 
 % Save optimization stats
 info = struct;
@@ -52,12 +57,12 @@ while true
     x = - H \ grad;
     % Apply tangent space solution
     [R, t] = pgo_exp(R, t, x, options);
-    fprintf('Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
+    print_if(options.verbose, 'Iter=%i, cost=%f, gradnorm=%.2e, xnorm=%.2e \n', ...
               iter, cost, gradnorm, norm(x));
     iter = iter + 1;
 end
 
-fprintf('Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
+print_if(options.verbose, 'Final result: iter=%i, cost=%f, gradnorm=%.2e. \n', ...
                    iter, cost, gradnorm);
-fprintf('=== End PGO Gauss-Newton ===\n\n');
+print_if(options.verbose, '=== End PGO Gauss-Newton ===\n\n');
 end
