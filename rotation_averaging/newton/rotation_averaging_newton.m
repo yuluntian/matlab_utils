@@ -29,7 +29,7 @@ if ~isfield(options, 'tangent_space_parametrization')
     options.tangent_space_parametrization = 'local';
 end
 if ~isfield(options, 'quotient_optimization')
-    options.quotient_optimization = false;
+    options.quotient_optimization = true;
 end
 if ~isfield(options, 'use_pcg')
     % Use PCG to solve Newton system
