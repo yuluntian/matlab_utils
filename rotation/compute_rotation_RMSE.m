@@ -4,12 +4,24 @@
 % Each set of rotations is represented as a d-by-dn block-structured matrix
 %
 % Yulun Tian
-function error_degree = compute_rotation_RMSE(Ropt, R)
+function error_degree = compute_rotation_RMSE(Ropt, R, options)
+
+if nargin < 3
+    options = struct;
+end
+if ~isfield(options, 'align')
+    options.align = true;
+end
 
 d = size(R,1);
 n = size(R,2) / d;
 
-squared_error = compute_rotation_orbit_distance(Ropt, R).^2;
+if options.align
+    squared_error = compute_rotation_orbit_distance(Ropt, R).^2;
+else
+    warning('Skip alignment.');
+    squared_error = norm(Ropt - R, 'fro').^2;
+end
 
 % root mean squared error (Chordal)
 error_chordal = sqrt(squared_error/n);
