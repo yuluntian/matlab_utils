@@ -4,7 +4,7 @@
 % Each set of rotations is represented as a d-by-dn block-structured matrix
 %
 % Yulun Tian
-function error_degree = compute_rotation_mean_error(Ropt, R)
+function [error_degree, err_deg_vector]= compute_rotation_mean_error(Ropt, R)
 
 d = size(R,1);
 n = size(R,2) / d;

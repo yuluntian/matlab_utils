@@ -175,13 +175,17 @@ while ischar(read_line)  % As long as this line is a valid character string
 end
 
 % Construct and return measurements struct
+measurements = struct;
+if exist('edges') == 1
 measurements.edges = edges;
 measurements.R = R;
 measurements.t = t;
 measurements.kappa = kappa;
 measurements.tau = tau;
+end
 
 % Construct and return pose struct
+poses = struct;
 poses.vertices = vertices;
 poses.R = pR;
 poses.t = pt;
