@@ -26,19 +26,36 @@ if ~isfield(options, 'verbose')
     options.verbose = true;
 end
 
-% Save optimization stats
 info = struct;
+d = size(measurements.R{1},1);
+n = max(max(measurements.edges));
+% If using chordal distance, construct additional problem data for faster
+% computation
+problem_data = struct;
+if strcmp(options.rotation_distance, 'chordal')
+    problem_data_start = tic;
+    print_if(options.verbose, 'Constructing problem data... ');
+    problem_data.ConLap = construct_connection_Laplacian(measurements);
+    problem_data.Manifold = stiefelstackedfactory(n, d, d);
+    info.problem_data_time = toc(problem_data_start);
+    print_if(options.verbose, 'Constructing problem data time: %.1f sec\n', info.problem_data_time);
+end
+
+% Save optimization stats
 info.iterations = [];
 info.costs = [];
 info.gradnorms = [];
+info.linearize_time = [];
+info.solve_time = [];
 if isfield(options, 'eval_func')
     info.eval_results = [];
 end
 iter = 0;
 while true
-    [r, J, W] = linearize_rotation_averaging(measurements, R, options);
-    cost = evaluate_rotation_averaging_cost(measurements, R, options);
-    g = differentiate_rotation_averaging(measurements, R, options);
+    
+    % Evaluate cost and gradients
+    cost = evaluate_rotation_averaging_cost(measurements, R, options, problem_data);
+    g = differentiate_rotation_averaging(measurements, R, options, problem_data);
     gradnorm = norm(g);
     info.iterations(end+1) = iter;
     info.costs(end+1) = cost;
@@ -49,10 +66,19 @@ while true
     if iter >= options.max_iterations || gradnorm < options.gradnorm_tol
         break;
     end
-    % Solve Gauss-Newton system
+
+    % Linearize and construct Gauss-Newton system
+    linearize_start = tic;
+    [r, J, W] = linearize_rotation_averaging(measurements, R, options);
     grad = J' * (W * r);
     H = J' * (W * J) + options.lambda * speye(size(J,2));
+    info.linearize_time(end+1) = toc(linearize_start);
+    
+    % Solve Gauss-Newton system
+    solve_start = tic;
     x = - H \ grad;
+    info.solve_time(end+1) = toc(solve_start);
+    
     % Apply tangent space solution
     R = rotation_averaging_exp(R, x, options);
     if options.verbose
