@@ -18,7 +18,7 @@ if strcmp(options.rotation_distance, 'chordal')
         cost = evaluate_rotation_averaging_cost_chordal(measurements, R, options, problem_data);
         return;
     else
-        warning('For chordal distance, provide problem_data.ConLap to enable faster computation.')
+        % warning('For chordal distance, provide problem_data.ConLap to enable faster computation.')
     end
 end
 
