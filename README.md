@@ -1,6 +1,6 @@
-# MATLAB Utilities for Pose Graph Optimization and Rotation Averaging
+# MATLAB Utilities for 3D geometry and optimization 
 
-A comprehensive MATLAB library for pose graph optimization (PGO), rotation averaging, and related geometric computations on manifolds.
+A MATLAB library for pose graph optimization (PGO), rotation averaging, and related geometric computations on manifolds.
 
 ## Overview
 
@@ -29,7 +29,7 @@ This will:
 ### Core Modules
 
 #### `pgo/` - Pose Graph Optimization
-Solve full pose graph optimization problems (rotation + translation).
+Solve full pose graph optimization problems.
 
 #### `rotation_averaging/` - Rotation Averaging
 Estimate absolute rotations from relative rotation measurements.
@@ -55,7 +55,7 @@ Specialized matrix operations for graph and optimization problems.
 Efficient solvers for structured linear systems.
 
 #### `g2o/` - G2O File I/O
-Interface with g2o format (popular in SLAM community).
+Interface with g2o format.
 
 #### `gtsam/` - GTSAM Utilities
 Helper functions for GTSAM integration.
